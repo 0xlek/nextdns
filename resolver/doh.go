@@ -71,16 +71,18 @@ func (r *DOH) resolve(ctx context.Context, q query.Query, buf []byte, rt http.Ro
 	// RFC1035, section 7.4: The results of an inverse query should not be cached
 	if q.Type != query.TypePTR && r.Cache != nil {
 		now = time.Now()
-		if v, found := r.Cache.Get(cacheKey{url, q.Class, q.Type, q.Name}); found {
-			if v, ok := v.(*cacheValue); ok {
+		if v, found := r.Cache.Get(CacheKey{url, q.Class, q.Type, q.Name}); found {
+			if found {
 				var minTTL uint32
 				n, minTTL = v.AdjustedResponse(buf, q.ID, r.CacheMaxAge, r.MaxTTL, now)
-				i.Transport = v.trans
+				i.Transport = v.Trans
 				i.FromCache = true
 				// Use cached entry if TTL is in the future and isn't older than
 				// the configuration last change.
-				if minTTL > 0 && r.lastMod(url).Before(v.time) {
+				if minTTL > 0 && r.lastMod(url).Before(v.Time) {
 					return n, i, nil
+				} else {
+					r.Cache.Delete(CacheKey{url, q.Class, q.Type, q.Name})
 				}
 			}
 		}
@@ -122,13 +124,13 @@ func (r *DOH) resolve(ctx context.Context, q query.Query, buf []byte, rt http.Ro
 	i.Transport = res.Proto
 	i.FromCache = false
 	if n > 0 && !truncated && err == nil && r.Cache != nil {
-		v := &cacheValue{
-			time:  now,
-			msg:   make([]byte, n),
-			trans: res.Proto,
+		v := &CacheValue{
+			Time:  now,
+			Msg:   make([]byte, n),
+			Trans: res.Proto,
 		}
-		copy(v.msg, buf[:n])
-		r.Cache.Add(cacheKey{url, q.Class, q.Type, q.Name}, v)
+		copy(v.Msg, buf[:n])
+		r.Cache.Add(CacheKey{url, q.Class, q.Type, q.Name}, v)
 		r.updateLastMod(url, res.Header.Get("X-Conf-Last-Modified"))
 	}
 	if r.MaxTTL > 0 && n > 0 {

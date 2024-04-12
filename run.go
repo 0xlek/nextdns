@@ -238,10 +238,9 @@ func run(args []string) error {
 	}
 	if cacheSize > 0 {
 		addr := os.Getenv("REDIS_ADDR")
-		password := os.Getenv("REDIS_PASSWORD")
-		dbStr := os.Getenv("REDIS_DB")
-		db, err := strconv.Atoi(dbStr)
-        cc := rcache.NewCache(addr, password, db, c.CacheMaxAge/time.Second)
+        fmt.Println(addr, "here is tha address")
+        cc := rcache.NewCache(string(addr), c.CacheMaxAge)
+        log.Info("running with max age: ", c.CacheMaxAge)
 
 		if err != nil {
 			log.Errorf("Cache init failed: %v", err)

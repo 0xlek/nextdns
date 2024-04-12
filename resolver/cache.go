@@ -7,21 +7,21 @@ import (
 	"github.com/nextdns/nextdns/resolver/query"
 )
 
-type cacheKey struct {
-	ctx    string
-	qclass query.Class
-	qtype  query.Type
-	qname  string
+type CacheKey struct {
+	Ctx    string
+	Qclass query.Class
+	Qtype  query.Type
+	Qname  string
 }
 
-func (k cacheKey) String() string {
-	return fmt.Sprintf("%s %s %s %s", k.ctx, k.qclass, k.qtype, k.qname)
+func (k CacheKey) String() string {
+	return fmt.Sprintf("%s %s %s %s", k.Ctx, k.Qclass, k.Qtype, k.Qname)
 }
 
-type cacheValue struct {
-	time  time.Time
-	msg   []byte
-	trans string
+type CacheValue struct {
+    Time  time.Time `json:"time"`
+    Msg   []byte `json:"msg"`
+    Trans string `json:"trans"`
 }
 
 // AdjustedResponse returns the cached response the message id set to id and the
@@ -30,12 +30,12 @@ type cacheValue struct {
 // minTTL is set to 0. If the response is invalid, b is nil and minTTL is 0. If
 // maxTTL is greater than 0 and the age of a record exceeds it, the TTL is
 // capped to this value, but won't affect returned minTTL.
-func (v cacheValue) AdjustedResponse(buf []byte, id uint16, maxAge, maxTTL uint32, now time.Time) (n int, minTTL uint32) {
-	n = len(v.msg)
+func (v CacheValue) AdjustedResponse(buf []byte, id uint16, maxAge, maxTTL uint32, now time.Time) (n int, minTTL uint32) {
+	n = len(v.Msg)
 	if n < 12 {
 		return 0, 0
 	}
-	msg := v.msg
+	msg := v.Msg
 	if len(buf) < n {
 		return 0, 0
 	}
@@ -45,7 +45,7 @@ func (v cacheValue) AdjustedResponse(buf []byte, id uint16, maxAge, maxTTL uint3
 	buf[1] = byte(id)
 
 	// Update TTLs and compute minTTL
-	age := uint32(now.Sub(v.time) / time.Second)
+	age := uint32(now.Sub(v.Time) / time.Second)
 	minTTL = updateTTL(buf[:n], age, maxAge, maxTTL)
 	return n, minTTL
 }
