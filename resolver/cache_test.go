@@ -95,9 +95,9 @@ func Test_cacheValue_AdjustedResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := cacheValue{
-				time: tt.fields.time,
-				msg:  tt.fields.msg,
+			v := CacheValue{
+				Time: tt.fields.time,
+				Msg:  tt.fields.msg,
 			}
 			buf := make([]byte, 4096)
 			n, gotMinTTL := v.AdjustedResponse(buf, tt.id, 0, 0, now)
